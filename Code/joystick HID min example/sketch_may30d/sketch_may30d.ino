@@ -21,31 +21,36 @@ void setup() {
   Serial.println("Press BOOT Button to activate the USB gamepad.");
   Serial.println("Longer press will change the affected button and controls.");
   Serial.println("Shorter press/release just activates the button and controls.");
+ 
+  int midpoint = 128;
+  Gamepad.rightStick(-midpoint, midpoint);  // Z Axis, Z Rotation
+  delay(1000);
 }
 
 void loop() {
 
-for (int t =0; t<32;t++)
+  int midpoint = 128;
+     
+  for (int t =midpoint-1; t<midpoint;t++)
+  {
+    /*Gamepad.pressButton(t);
+    delay(100);
+    Gamepad.releaseButton(t);
+    delay(100);*/
+    Gamepad.rightStick(t, -t);  // Z Axis, Z Rotation
+    delay(80);
+   // Gamepad.rightStick(0,0);  // Z Axis, Z Rotation
+    //delay(1000);
+  }
+
+/*
+ for (int t =midpoint; t<midpoint*2;t++)
 {
-  /*Gamepad.pressButton(t);
-  delay(100);
-  Gamepad.releaseButton(t);
-  delay(100);*/
-  Gamepad.rightStick(0, t << 2);  // Z Axis, Z Rotation
-  delay(300);
+
+  Gamepad.rightStick(0, t);  // Z Axis, Z Rotation
+  delay(50);
  // Gamepad.rightStick(0,0);  // Z Axis, Z Rotation
   //delay(1000);
-}
- for (int t =32; t<64;t++)
-{
-  /*Gamepad.pressButton(t);
-  delay(100);
-  Gamepad.releaseButton(t);
-  delay(100);*/
-  Gamepad.rightStick(0, t << 2);  // Z Axis, Z Rotation
-  delay(300);
- // Gamepad.rightStick(0,0);  // Z Axis, Z Rotation
-  //delay(1000);
-} 
+} */
 }
 #endif /* ARDUINO_USB_MODE */

@@ -13,7 +13,11 @@ SteeringAngle::SteeringAngle(int _steeringPotPin)
 float SteeringAngle::getSteeringAngle()
 {
   int analogValue = analogRead(this->steeringPotPin);//read value from pot
-  this->steeringAngle = (analogValue - this->centreVal) * this->DegPerVal;
+  
+  this->steeringAngle_old   = this->steeringAngle;
+  this->steeringAngle       = (analogValue - this->centreVal) * this->DegPerVal;
+
+  this->steeringAngle = FILETERALPHA * this->steeringAngle + (1-FILETERALPHA)*this->steeringAngle_old;
   
   return this->steeringAngle;
 }
@@ -63,7 +67,7 @@ void SteeringAngle::begin()
           Serial.println("Value Captured!");
           this->DegPerVal = 90.0 / (right45val-left45val);//read value from pin pot;
           Serial.println("=================================");
-          Serial.println("Calibration values determined(Hardcoded in SteeringAngle.h file):");
+          Serial.println("Calibration values determined(To be hardcoded in SteeringAngle.h file):");
           Serial.print("Centre Value: ");
           Serial.println(centreVal);
           Serial.print("Degree per value determined: ");

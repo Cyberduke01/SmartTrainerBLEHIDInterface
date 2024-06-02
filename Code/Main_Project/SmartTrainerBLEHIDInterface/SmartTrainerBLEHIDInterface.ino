@@ -6,6 +6,17 @@
  */
  //sudo chmod 666 /dev/ttyACM0
 
+#ifndef ARDUINO_USB_MODE
+#error This ESP32 SoC has no Native USB interface
+#elif ARDUINO_USB_MODE == 1
+#warning This sketch should be used when USB is in OTG mode
+void setup() {}
+void loop() {}
+#else
+#include "USB.h"
+#include "USBHIDGamepad.h"
+USBHIDGamepad Gamepad;
+
 
 #include <BLEComm.h>
 #include <SteeringAngle.h>
@@ -27,7 +38,8 @@ void setup() {
   Serial.begin(115200);
   BLECommObj.begin();
   SteeringAngleObj.begin();
-
+  Gamepad.begin();
+  USB.begin();
 
   old_millis = millis();     
 
@@ -49,8 +61,13 @@ void loop() {
   Serial.print("Steering Angle: ");
   Serial.println(SteeringAngleObj.getSteeringAngle());
 
+  int rescaledVal = SteeringAngleObj.getSteeringAngle() * 2.7;
     
+   Gamepad.rightStick(rescaledVal,0);  // Z Axis, Z Rotation
 
 
-  delay(10); // Delay a second between loops.
+  //delay(10); // Delay a second between loops.
 } // End of loop
+
+
+#endif /* ARDUINO_USB_MODE */
