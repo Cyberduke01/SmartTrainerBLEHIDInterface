@@ -1,8 +1,6 @@
 /**
- * A BLE client example that is rich in capabilities.
- * There is a lot new capabilities implemented.
- * author unknown
- * updated by chegewara
+ * This communicates with a BLE smart trainer to turn your cycle at home setup into a gamepad
+ * author: Cyberduke01
  */
  //sudo chmod 666 /dev/ttyACM0
 

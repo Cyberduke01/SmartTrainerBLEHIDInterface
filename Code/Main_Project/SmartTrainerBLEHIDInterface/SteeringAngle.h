@@ -5,7 +5,7 @@
 
 #include "Arduino.h"
 
-#define  FILETERALPHA 0.05
+#define  FILETERALPHA 0.99
 
 class SteeringAngle
 {
