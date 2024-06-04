@@ -21,6 +21,9 @@ USBHIDGamepad Gamepad;
 
 
 #define STEERING_POT_PIN 4
+ 
+  
+int maxPower = 200; 
 
 
 
@@ -60,8 +63,11 @@ void loop() {
   Serial.println(SteeringAngleObj.getSteeringAngle());
 
   int rescaledVal = SteeringAngleObj.getSteeringAngle() * 2.7;
-    
-   Gamepad.rightStick(rescaledVal,0);  // Z Axis, Z Rotation
+  int rescaledPower = (__cyclePower*1.0/maxPower)*127.0;
+  if (rescaledPower>127) rescaledPower = 127;
+
+  
+   Gamepad.rightStick(rescaledVal,rescaledPower);  // Z Axis, Z Rotation
 
 
   //delay(10); // Delay a second between loops.

@@ -25,7 +25,7 @@ class SteeringAngle
   
   //Calibration values for steering angle
   uint16_t centreVal = 4096/2;//2259;
-  float    DegPerVal = -0.021;//0.032787;
+  float    DegPerVal = 0.032787;//-0.021;//
   float    steeringAngle = 0;
   float    steeringAngle_old = 0;
   void countdown(int seconds);
