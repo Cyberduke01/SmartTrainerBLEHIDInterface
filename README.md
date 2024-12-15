@@ -7,3 +7,10 @@ Additional usefull information:
 ## Examples/Libraries
 
 - The min example of gamepad code can be found at: Examples -> USB -> Gamepad
+
+## "standards" used in build
+
+- cables from sensors, 
+-	+ = 1
+-	- = 2
+-	signal = green

@@ -2,11 +2,10 @@
 #include "SteeringAngle.h"
 
 
-SteeringAngle::SteeringAngle(int _steeringPotPin)
+SteeringAngle::SteeringAngle(int _steeringPotPin,int _steeringRescalePotPin)
 {
-  this->steeringPotPin = _steeringPotPin;
-
-
+  this->steeringPotPin        = _steeringPotPin;
+  this->steeringRescalePotPin = _steeringRescalePotPin;
 }
 
 
@@ -17,9 +16,15 @@ float SteeringAngle::getSteeringAngle()
   this->steeringAngle_old   = this->steeringAngle;
   this->steeringAngle       = (analogValue - this->centreVal) * this->DegPerVal;
 
-  this->steeringAngle = FILETERALPHA * this->steeringAngle + (1-FILETERALPHA)*this->steeringAngle_old;
-  
-  return this->steeringAngle;
+  this->steeringAngle = ANGLEFILETERALPHA * this->steeringAngle + (1-ANGLEFILETERALPHA)*this->steeringAngle_old;
+
+  this->steeringRescaleFactor_old   = this->steeringRescaleFactor;
+  int rescaleAnalogVal = analogRead(this->steeringRescalePotPin);//read value from pot
+
+  this->steeringRescaleFactor =0.8 +((1.0*rescaleAnalogVal) / 1100.0);
+  this->steeringRescaleFactor = RESCALEFILETERALPHA * this->steeringRescaleFactor + (1-RESCALEFILETERALPHA)*this->steeringRescaleFactor_old;
+
+  return this->steeringAngle*steeringRescaleFactor;
 }
 
 void SteeringAngle::countdown(int seconds)
@@ -67,7 +72,7 @@ void SteeringAngle::begin()
           Serial.println("Value Captured!");
           this->DegPerVal = 90.0 / (right45val-left45val);//read value from pin pot;
           Serial.println("=================================");
-          Serial.println("Calibration values determined(To be hardcoded in SteeringAngle.h file):");
+          Serial.println("Calibration values determined(To be hardcoded in SteeringAngle.h file otherwise re-calibration will be needed on restart):");
           Serial.print("Centre Value: ");
           Serial.println(centreVal);
           Serial.print("Degree per value determined: ");

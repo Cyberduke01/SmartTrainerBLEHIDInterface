@@ -16,20 +16,23 @@ void loop() {}
 USBHIDGamepad Gamepad;
 
 
-#include <BLEComm.h>
-#include <SteeringAngle.h>
-
+#include "BLEComm.h"
+#include "SteeringAngle.h"
+#include "Brakevalue.h"
 
 #define STEERING_POT_PIN 4
- 
+#define STEERING_RESCALE_PIN 6
+#define BRAKING_PIN 5 
   
-int maxPower = 200; 
+int maxPower = 150; 
 
-
-
+//Objects
 BLEComm BLECommObj;
-SteeringAngle SteeringAngleObj(STEERING_POT_PIN);
+SteeringAngle SteeringAngleObj(STEERING_POT_PIN,STEERING_RESCALE_PIN);
+BrakeValue BrakeValueObj(BRAKING_PIN);
 
+//Functions
+int limitvalue(int input,int _min, int _max);
 
 //varible such that bluetooth only gets val once a second
 unsigned long old_millis = millis();
@@ -39,6 +42,7 @@ void setup() {
   Serial.begin(115200);
   BLECommObj.begin();
   SteeringAngleObj.begin();
+  BrakeValueObj.begin();
   Gamepad.begin();
   USB.begin();
 
@@ -61,17 +65,29 @@ void loop() {
 
   Serial.print("Steering Angle: ");
   Serial.println(SteeringAngleObj.getSteeringAngle());
-
-  int rescaledVal = SteeringAngleObj.getSteeringAngle() * 2.7;
-  int rescaledPower = (__cyclePower*1.0/maxPower)*127.0;
-  if (rescaledPower>127) rescaledPower = 127;
-
   
-   Gamepad.rightStick(rescaledVal,rescaledPower);  // Z Axis, Z Rotation
+
+  Serial.println("%");
+
+  int rescaledVal         = limitvalue((SteeringAngleObj.getSteeringAngle()) ,-127,127);
+  int rescaledPower       = limitvalue((__cyclePower*1.0/maxPower)*127.0     ,0   ,127);  
+  int rescaledbrakingperc = limitvalue((BrakeValueObj.getBrakingPerc()*1.27) ,0   ,127);
+
+  Gamepad.rightStick(0,rescaledPower);  // Z Axis, Z Rotation
+  Gamepad.leftStick(rescaledVal,rescaledbrakingperc);  
 
 
-  //delay(10); // Delay a second between loops.
+  //delay(1000); // Delay a second between loops.
 } // End of loop
 
+int limitvalue(int input,int _min, int _max)
+{
+  if  (input < _min)
+    return _min;
+   if  (input > _max)
+    return _max;
+
+   return input;
+}
 
 #endif /* ARDUINO_USB_MODE */
