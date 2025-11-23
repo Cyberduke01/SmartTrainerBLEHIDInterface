@@ -11,6 +11,6 @@ Additional usefull information:
 ## "standards" used in build
 
 - cables from sensors, 
--	+ = 1
--	- = 2
--	signal = green
+-	"plus"  = 1
+-	"Minus" = 2
+-	signal  = green

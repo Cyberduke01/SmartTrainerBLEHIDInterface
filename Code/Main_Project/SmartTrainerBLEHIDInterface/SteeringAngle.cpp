@@ -21,7 +21,7 @@ float SteeringAngle::getSteeringAngle()
   this->steeringRescaleFactor_old   = this->steeringRescaleFactor;
   int rescaleAnalogVal = analogRead(this->steeringRescalePotPin);//read value from pot
 
-  this->steeringRescaleFactor =0.8 +((1.0*rescaleAnalogVal) / 1100.0);
+  this->steeringRescaleFactor = 0.8 +((1.0*rescaleAnalogVal) / 1100.0);
   this->steeringRescaleFactor = RESCALEFILETERALPHA * this->steeringRescaleFactor + (1-RESCALEFILETERALPHA)*this->steeringRescaleFactor_old;
 
   return this->steeringAngle*steeringRescaleFactor;

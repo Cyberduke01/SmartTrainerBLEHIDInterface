@@ -5,8 +5,6 @@
 BrakeValue::BrakeValue(int _Braking_pin)
 {
   this->BrakingPin = _Braking_pin;
-
-
 }
 
 
