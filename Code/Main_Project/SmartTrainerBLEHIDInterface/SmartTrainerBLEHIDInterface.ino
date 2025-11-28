@@ -27,7 +27,8 @@ USBHIDGamepad Gamepad;
 
 #define STEERING_POT_PIN 4
 #define STEERING_RESCALE_PIN 6
-#define BRAKING_PIN 5 
+#define BRAKING_PIN 5
+#define SELECT_CALIBRATION_PIN 42 
 
 #define SD_MOSI     1
 #define SD_MISO     2
@@ -40,6 +41,7 @@ USBHIDGamepad Gamepad;
 #define TOUCHPIN 10
 
 int maxPower = 150; 
+int screenUpdateRateMillis = 50;
 
 //Objects
 BLEComm BLECommObj;
@@ -53,41 +55,76 @@ CapTouchControl TouchObj(TOUCHPIN);
 int limitvalue(int input,int _min, int _max);
 
 //varible such that bluetooth only gets val once a second
-unsigned long old_millis = millis();
+unsigned long old_millisBLE = millis();
+unsigned long old_millisScreen = millis();
 
 char txtScreenBuffer[20];
 bool oldBrake = TouchObj.isBrakePressed();
-bool oldBrake = TouchObj.isBrakePressed();
+
 void setup() {
   Serial.begin(115200);
 
-  bool CalibrationRequired = true;
+  pinMode(SELECT_CALIBRATION_PIN, INPUT);//check if we want to calibrate the values
+  bool CalibrationRequired = !digitalRead(SELECT_CALIBRATION_PIN);
   
   ScreenObj.begin();
   TouchObj.begin(CalibrationRequired,&ScreenObj);
   //SDcardObj.begin();
   BLEComm_HeartRateObj.begin();
   BLECommObj.begin();
-  SteeringAngleObj.begin();
-  BrakeValueObj.begin();
+  SteeringAngleObj.begin(CalibrationRequired,&ScreenObj);
+  //BrakeValueObj.begin();
   Gamepad.begin();
   USB.begin();
-  
 
   ScreenObj.ClearScreen();
-  old_millis = millis();     
 
+  
+
+  old_millisBLE = millis();     
+  old_millisScreen = millis(); 
 } // End of setup.
 
 
 // This is the Arduino main loop function.
 void loop() {
+  
+  int rescaledSteeringVal = limitvalue((SteeringAngleObj.getSteeringAngle()) ,-127,127);
+  int rescaledPower       = limitvalue((__cyclePower*1.0/maxPower)*127.0     ,0   ,127);  
+  //int rescaledbrakingperc = limitvalue((BrakeValueObj.getBrakingPerc()*1.27) ,0   ,127);
 
-  if ((millis() - old_millis) > 1000)//once every second
+  if ((millis() - old_millisBLE) > 1000)//once every second we get data from bluetooth
   {
     BLECommObj.loop();
-    BLEComm_HeartRateObj.loop();
-    old_millis = millis();    
+    //BLEComm_HeartRateObj.loop();
+    
+
+    //it only makes sense to update power on screen if we actually have a new power 
+    sprintf(txtScreenBuffer, "P: %dw",__cyclePower );
+    ScreenObj.OverrideLine(0,txtScreenBuffer); 
+
+   /* for (int i = 0;i<25;i++)
+    {
+      Gamepad.pressButton(i);
+      delay(1000);
+      Gamepad.releaseButton(i);
+    }*/
+    old_millisBLE = millis();
+  }
+
+  if ((millis() - old_millisScreen) > screenUpdateRateMillis)//check to update screen also only once an interval
+  {
+    if (oldBrake != TouchObj.isBrakePressed())
+    {
+      sprintf(txtScreenBuffer, "Brake: %d ",TouchObj.isBrakePressed());
+      ScreenObj.OverrideLine(1,txtScreenBuffer);
+      oldBrake = TouchObj.isBrakePressed();
+    }
+    
+    sprintf(txtScreenBuffer, "Steer:%d",rescaledSteeringVal );
+    ScreenObj.OverrideLine(2,txtScreenBuffer);
+
+    old_millisScreen = millis();  
   }
 
   Serial.print("Cycling power: ");
@@ -101,30 +138,8 @@ void loop() {
 
   Serial.println("%");
 
-  int rescaledSteeringVal = limitvalue((SteeringAngleObj.getSteeringAngle()) ,-127,127);
-  int rescaledPower       = limitvalue((__cyclePower*1.0/maxPower)*127.0     ,0   ,127);  
-  int rescaledbrakingperc = limitvalue((BrakeValueObj.getBrakingPerc()*1.27) ,0   ,127);
-
   Gamepad.rightStick(0,rescaledPower);  // Z Axis, Z Rotation
-  Gamepad.leftStick(rescaledSteeringVal,rescaledbrakingperc);  
-
-  //ScreenObj.ClearScreen();
-  sprintf(txtScreenBuffer, "Power: %d w",rescaledPower );
-  ScreenObj.SetLine(0,txtScreenBuffer);
-
-  if (oldBrake != TouchObj.isBrakePressed())
-  {
-    sprintf(txtScreenBuffer, "Brake: %d ",TouchObj.isBrakePressed());
-    ScreenObj.OverrideLine(1,txtScreenBuffer);
-    oldBrake = TouchObj.isBrakePressed();
-  }
-
- 
-  sprintf(txtScreenBuffer, "Steer: %d",rescaledSteeringVal );
-  ScreenObj.OverrideLine(2,txtScreenBuffer);
-
-
-
+  Gamepad.leftStick(rescaledSteeringVal,0);  
 
   //delay(1000); // Delay a second between loops.
 } // End of loop

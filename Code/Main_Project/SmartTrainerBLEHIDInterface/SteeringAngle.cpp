@@ -27,62 +27,70 @@ float SteeringAngle::getSteeringAngle()
   return this->steeringAngle*steeringRescaleFactor;
 }
 
-void SteeringAngle::countdown(int seconds)
+void SteeringAngle::countdown(int seconds,ScreenControl *screen)
 {
   unsigned long start = millis();
   int i = 0;
-        
+  char txtScreenBuffer[1];      
   while (millis() - start < (seconds*1000))
   {
     if ((millis() - start) > (i * 1000))
     {
-      Serial.println(seconds-i);
+      sprintf(txtScreenBuffer, "  %d",seconds-i);
+      screen->ClearScreen();
+      screen->SetLine(1,txtScreenBuffer,4);
       i++;
     }
   }
 }
 
-void SteeringAngle::begin()
+void SteeringAngle::begin(bool calibtration,ScreenControl *screen)
 {
-    
-   //DAC Setup
-  analogReadResolution(12); // Read in 12 BIT
-  //ask User if they want to calibrate steering
-    Serial.println("If steering calibration is required, input 'Y' in the next 5 Seconds");
-    delay(6000); // Delay a second between loops.
-  
-    if (Serial.available())  {
-      char c = Serial.read();  //gets one byte from serial buffer
-      if ((c == 'y')||(c == 'Y')) {
-          Serial.println("Starting Steering calibration");
-          Serial.println("Move steering wheel to the zero degree position");
-          Serial.println("value will be captured in 10 Seconds");
-          countdown(10);
-          this->centreVal = analogRead(this->steeringPotPin);//read value from pin pot
-          Serial.println("Value Captured!");
-          Serial.println("Now move steering wheel 45 Degrees to the left");
-          Serial.println("value will be captured in 10 Seconds");
-          countdown(10);
-          uint16_t left45val= analogRead(this->steeringPotPin);
-          Serial.println("Value Captured!");
-          Serial.println("Now move steering wheel 45 Degrees to the right");
-          Serial.println("value will be captured in 10 Seconds");
-          countdown(10);
-          uint16_t right45val= analogRead(this->steeringPotPin);
-          Serial.println("Value Captured!");
-          this->DegPerVal = 90.0 / (right45val-left45val);//read value from pin pot;
-          Serial.println("=================================");
-          Serial.println("Calibration values determined(To be hardcoded in SteeringAngle.h file otherwise re-calibration will be needed on restart):");
-          Serial.print("Centre Value: ");
-          Serial.println(centreVal);
-          Serial.print("Degree per value determined: ");
-          Serial.printf("%f\n",DegPerVal);
-          Serial.println("=================================");
-          delay(10000); 
-  
-        }
-      }
-      else
-        Serial.println("No steering angle calibration --> using saved values");
+  int countdowntime = 3;
+  if (calibtration)
+  {
+    //DAC Setup
+    analogReadResolution(12); // Read in 12 BIT
+    //ask User if they want to calibrate steering
+    screen->ClearScreen();
+    screen->SetLine(0,"Calibrating Steering...",1);
+    screen->SetLine(1,"Move to the zero degree position",1);
+    screen->SetLine(2,"value will be captured soon",1);
+    delay(5000);
+    countdown(countdowntime,screen);
+    this->centreVal = analogRead(this->steeringPotPin);//read value from pin pot
+    screen->ClearScreen();
+    screen->SetLine(0,"Value Captured!",1);
+    screen->SetLine(1,"Move 45 Degrees to the left",1);
+    screen->SetLine(2,"value will be captured soon",1);
+    delay(5000);
+    countdown(countdowntime,screen);
+    uint16_t left45val= analogRead(this->steeringPotPin);
+    screen->ClearScreen();
+    screen->SetLine(0,"Value Captured!",1);
+    screen->SetLine(1,"Move 45 Degrees to the right",1);
+    screen->SetLine(2,"value will be captured soon",1);
+    delay(5000);
+    countdown(countdowntime,screen);
+    uint16_t right45val= analogRead(this->steeringPotPin);
+    this->DegPerVal = 90.0 / (right45val-left45val);
+
+    screen->ClearScreen();
+    screen->SetLine(0,"Steering  calibrated!");
+    delay(2000);
+    screen->ClearScreen();
+    screen->SetLine(0,"Hardcode values in SteeringAngle.h!  Otherwise re-calibration will be needed on restart",1);
+    delay(10000);
+
+    char txtScreenBuffer1[50];
+    sprintf(txtScreenBuffer1, "Centre: %d",centreVal);
+    char txtScreenBuffer2[50];
+    sprintf(txtScreenBuffer2, "DegPerVal: %1.6f",DegPerVal);
+    screen->ClearScreen();
+    screen->SetLine(0,txtScreenBuffer1,1);
+    screen->SetLine(1,txtScreenBuffer2,1);
+
+    delay(10000);
+  }
  }
       
