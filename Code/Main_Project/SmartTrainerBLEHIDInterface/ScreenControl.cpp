@@ -9,28 +9,40 @@ ScreenControl::ScreenControl(int _SCREEN_SDA, int _SCREEN_SCL)
   this->SCREEN_SCL = _SCREEN_SCL;
 }
 
-void ScreenControl::DrawProgressBar(int _lineNo, float barHeight, int progress)//height is percentage of lineheight
+void ScreenControl::DrawProgressBar(float _lineNo, float barHeight, int progress, int dir)//height is percentage of lineheight
 {
-  int x0 = 0;
-  int y0 = this->lineHeight * _lineNo; 
-  display.fillRect(x0, y0, 128, int(this->lineHeight * (barHeight*1.0)), BLACK);
-  display.drawRect(x0, y0, 128, int(this->lineHeight * (barHeight*1.0)), WHITE);
-  display.fillRect(x0, y0, int(progress/100.0*128.0), int(this->lineHeight * (barHeight*1.0)), WHITE);
+  int x_prog = int(progress/100.0*128.0);
+
+  int y0 = int(this->lineHeight * _lineNo); 
+  display.fillRect(0, y0, 128, int(this->lineHeight * (barHeight*1.0)), BLACK);//clears all
+  display.drawRect(0, y0, 128, int(this->lineHeight * (barHeight*1.0)), WHITE);//draws empty box
+  if (dir == -1)
+    display.fillRect(x_prog, y0, 128, int(this->lineHeight * (barHeight*1.0)), WHITE);//draws progress
+  else
+    display.fillRect(0, y0, x_prog, int(this->lineHeight * (barHeight*1.0)), WHITE);//draws progress
   display.display();
-  /*int x0 = 0;
-  int y0 = this->lineHeight * _lineNo; 
-  display.fillRect(x0, y0, 128, int(5), BLACK);
-  display.drawRect(x0, y0, 128, int(5), WHITE);
-  display.fillRect(x0, y0, int(newProgress/100.0*128.0), int(5), WHITE);
-  display.display();*/
 }
 
-void ScreenControl::OverrideLine(int _lineNo,char* text)
+void ScreenControl::DrawDoubleDirProgressBar(float _lineNo, float barHeight, int progress)
+{
+  int x_prog = int((progress*(128.0/200.0))+64.0);
+
+  int y0 = int(this->lineHeight * _lineNo); 
+  display.fillRect(0, y0, 128, int(this->lineHeight * (barHeight*1.0)), BLACK);//clears all
+  display.drawRect(0, y0, 128, int(this->lineHeight * (barHeight*1.0)), WHITE);//draws empty box
+  if (progress < 0)
+    display.fillRect(x_prog, y0, 64-x_prog, int(this->lineHeight * (barHeight*1.0)), WHITE);//draws progress
+  else
+    display.fillRect(64, y0, x_prog-64, int(this->lineHeight * (barHeight*1.0)), WHITE);//draws progress
+  display.display();
+}
+
+void ScreenControl::OverrideLine(float _lineNo,char* text,int _size)
 {
   int x0 = 0;
-  int y0 = this->lineHeight * _lineNo; 
-  display.fillRect(x0, y0, 128, lineHeight, BLACK);
-  SetLine(_lineNo,text);
+  int y0 = int(this->lineHeight * _lineNo); 
+  display.fillRect(x0, y0, 128, this->lineHeight * _size, BLACK);
+  SetLine(_lineNo,text,_size);
 }
 void ScreenControl::begin()
 {  
@@ -43,24 +55,15 @@ void ScreenControl::begin()
   display.setTextSize(textSize);
 }
 
-void ScreenControl::SetLine(int lineNo,char* text)
-{
-  display.setTextSize(textSize);
-  display.setCursor(0, lineNo * lineHeight);//x and y position to start writing
-  display.println(text);
-  display.display();
-  //delay(5000);  // Show greeting for 5 seconds
-}
-
 void ScreenControl::ClearScreen()
 {
   display.clearDisplay();
 }
 
-void ScreenControl::SetLine(int lineNo,char* text,int _size)
+void ScreenControl::SetLine(float lineNo,char* text,int _size)
 {
   display.setTextSize(_size);
-  display.setCursor(0, lineNo * this->lineHeight);//x and y position to start writing
+  display.setCursor(0, int(lineNo * this->lineHeight));//x and y position to start writing
   display.println(text);
   display.display();
   //delay(5000);  // Show greeting for 5 seconds

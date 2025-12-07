@@ -15,10 +15,10 @@ class ScreenControl
     ScreenControl(int _SCREEN_SDA, int _SCREEN_SCL);
     void begin();
 
-    void SetLine(int lineNo,char* text);
-    void SetLine(int lineNo,char* text,int _size);
-    void OverrideLine(int lineNo,char* text);
-    void DrawProgressBar(int _lineNo, float barHeight, int progress);
+    void SetLine(float lineNo,char* text, int _size);
+    void OverrideLine(float lineNo,char* text, int _size);
+    void DrawProgressBar(float _lineNo, float barHeight, int progress, int dir);
+    void DrawDoubleDirProgressBar(float _lineNo, float barHeight, int progress);
     void ClearScreen();
     
   private:

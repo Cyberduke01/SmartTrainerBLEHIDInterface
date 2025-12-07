@@ -76,7 +76,7 @@ void SteeringAngle::begin(bool calibtration,ScreenControl *screen)
     this->DegPerVal = 90.0 / (right45val-left45val);
 
     screen->ClearScreen();
-    screen->SetLine(0,"Steering  calibrated!");
+    screen->SetLine(0,"Steering  calibrated!",1.0);
     delay(2000);
     screen->ClearScreen();
     screen->SetLine(0,"Hardcode values in SteeringAngle.h!  Otherwise re-calibration will be needed on restart",1);

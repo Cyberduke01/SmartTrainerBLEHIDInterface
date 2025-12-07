@@ -38,7 +38,7 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
       this->loop();
     touchValueMax_Brake = aveTouchValueBrake;//read value when brake is fully pressed
     screen->ClearScreen();
-    screen->SetLine(0,"Brake calibrated");
+    screen->SetLine(0,"Brake calibrated",2);
     delay(2000);
     screen->ClearScreen();
     screen->SetLine(0,"Hardcode values in CapTouchControl.h!  Otherwise re-calibration will be needed on restart",1);
@@ -46,8 +46,8 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
     sprintf(txtScreenBuffer, "Min: %d",touchValueMin_Brake);
     sprintf(txtScreenBuffer2, "Max: %d",touchValueMax_Brake);
     screen->ClearScreen();
-    screen->SetLine(0,txtScreenBuffer);
-    screen->SetLine(1,txtScreenBuffer2);
+    screen->SetLine(0,txtScreenBuffer,2);
+    screen->SetLine(1,txtScreenBuffer2,2);
     touchThreshold_Brake = touchValueMax_Brake-touchValueMin_Brake/2.0;
     delay(10000);
     //Lets calibrate the Boost for the Brake!
@@ -70,7 +70,7 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
       this->loop();
     touchValueMax_Boost = aveTouchValueBoost;//read value when brake is fully pressed
     screen->ClearScreen();
-    screen->SetLine(0,"Boost calibrated");
+    screen->SetLine(0,"Boost calibrated",2);
     delay(2000);
     screen->ClearScreen();
     screen->SetLine(0,"Hardcode values in CapTouchControl.h!  Otherwise re-calibration will be needed on restart",1);
@@ -78,8 +78,8 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
     sprintf(txtScreenBuffer, "Min: %d",touchValueMin_Boost);
     sprintf(txtScreenBuffer2, "Max: %d",touchValueMax_Boost);
     screen->ClearScreen();
-    screen->SetLine(0,txtScreenBuffer);
-    screen->SetLine(1,txtScreenBuffer2);
+    screen->SetLine(0,txtScreenBuffer,2);
+    screen->SetLine(1,txtScreenBuffer2,2);
     touchThreshold_Boost = touchValueMax_Boost-touchValueMin_Boost/2.0;
     delay(10000);
   }
