@@ -18,6 +18,7 @@ class ScreenControl
     void SetLine(int lineNo,char* text);
     void SetLine(int lineNo,char* text,int _size);
     void OverrideLine(int lineNo,char* text);
+    void DrawProgressBar(int _lineNo, float barHeight, int progress);
     void ClearScreen();
     
   private:
@@ -30,7 +31,6 @@ class ScreenControl
     static const int screenWidth = 128;
     static const int screenHeight= 64;
     static const int resetPin = -1;
-   
 
     
 };

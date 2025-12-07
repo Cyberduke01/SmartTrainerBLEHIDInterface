@@ -4,6 +4,7 @@
  * author: Cyberduke01
  */
  //sudo chmod 666 /dev/ttyACM0
+ //http://wiki.fluidnc.com/en/hardware/ESP32-S3_Pin_Reference
 
 #ifndef ARDUINO_USB_MODE
 #error This ESP32 SoC has no Native USB interface
@@ -38,7 +39,11 @@ USBHIDGamepad Gamepad;
 #define SCREEN_SDA 18
 #define SCREEN_SCL 46
 
-#define TOUCHPIN 10
+#define TOUCHPIN_BOOST 5
+#define TOUCHPIN_BRAKE 10
+
+#define BRAKE_BUTTON_ON_GAMEPAD 2
+#define BOOST_BUTTON_ON_GAMEPAD 1
 
 int maxPower = 150; 
 int screenUpdateRateMillis = 50;
@@ -49,7 +54,7 @@ BLEComm_HeartRate BLEComm_HeartRateObj;
 SteeringAngle SteeringAngleObj(STEERING_POT_PIN,STEERING_RESCALE_PIN);
 BrakeValue BrakeValueObj(BRAKING_PIN);
 ScreenControl ScreenObj(SCREEN_SDA,SCREEN_SCL);
-CapTouchControl TouchObj(TOUCHPIN);
+CapTouchControl TouchObj(TOUCHPIN_BRAKE,TOUCHPIN_BOOST);
 //SDControl SDcardObj(SD_MOSI, SD_MISO, SD_SCLK, SD_CS);
 //Functions
 int limitvalue(int input,int _min, int _max);
@@ -59,7 +64,10 @@ unsigned long old_millisBLE = millis();
 unsigned long old_millisScreen = millis();
 
 char txtScreenBuffer[20];
-bool oldBrake = TouchObj.isBrakePressed();
+bool oldBrake_screen  = TouchObj.isBrakePressed();
+bool oldBrake_control = TouchObj.isBrakePressed();
+bool oldBoost_control = TouchObj.isBoostPressed();
+bool oldBoost_screen  = TouchObj.isBoostPressed();
 
 void setup() {
   Serial.begin(115200);
@@ -83,12 +91,26 @@ void setup() {
 
   old_millisBLE = millis();     
   old_millisScreen = millis(); 
+
+
+
 } // End of setup.
 
 
 // This is the Arduino main loop function.
 void loop() {
   
+  for (int i = 0;i<=100;i++)//the values range from 0 - 32
+  {
+    ScreenObj.DrawProgressBar(3,0.5,i);//(int _lineNo, int height, int progress)//height is percentage of lineheight
+    delay(20);
+  }
+  for (int i = 100;i>=1;i--)//the values range from 0 - 32
+  {
+    ScreenObj.DrawProgressBar(3,1,i);//(int _lineNo, int height, int progress)//height is percentage of lineheight
+    delay(20);
+  }
+
   int rescaledSteeringVal = limitvalue((SteeringAngleObj.getSteeringAngle()) ,-127,127);
   int rescaledPower       = limitvalue((__cyclePower*1.0/maxPower)*127.0     ,0   ,127);  
   //int rescaledbrakingperc = limitvalue((BrakeValueObj.getBrakingPerc()*1.27) ,0   ,127);
@@ -103,8 +125,11 @@ void loop() {
     sprintf(txtScreenBuffer, "P: %dw",__cyclePower );
     ScreenObj.OverrideLine(0,txtScreenBuffer); 
 
-   /* for (int i = 0;i<25;i++)
+    /*for (int i = 0;i<40;i++)//the values range from 0 - 32
     {
+      sprintf(txtScreenBuffer, "  %d",i);
+      ScreenObj.ClearScreen();
+      ScreenObj.SetLine(1,txtScreenBuffer,4);
       Gamepad.pressButton(i);
       delay(1000);
       Gamepad.releaseButton(i);
@@ -114,18 +139,41 @@ void loop() {
 
   if ((millis() - old_millisScreen) > screenUpdateRateMillis)//check to update screen also only once an interval
   {
-    if (oldBrake != TouchObj.isBrakePressed())
+    if (oldBrake_screen != TouchObj.isBrakePressed())
     {
       sprintf(txtScreenBuffer, "Brake: %d ",TouchObj.isBrakePressed());
       ScreenObj.OverrideLine(1,txtScreenBuffer);
-      oldBrake = TouchObj.isBrakePressed();
+      oldBrake_screen = TouchObj.isBrakePressed();
+    }
+    if (oldBoost_screen != TouchObj.isBoostPressed())
+    {
+      sprintf(txtScreenBuffer, "Boost: %d ",TouchObj.isBoostPressed());
+      ScreenObj.OverrideLine(2,txtScreenBuffer);
+      oldBoost_screen = TouchObj.isBoostPressed();
     }
     
-    sprintf(txtScreenBuffer, "Steer:%d",rescaledSteeringVal );
-    ScreenObj.OverrideLine(2,txtScreenBuffer);
+    sprintf(txtScreenBuffer, "Steer:%3.0f",100.0*rescaledSteeringVal/127.0 );
+    ScreenObj.OverrideLine(3,txtScreenBuffer);
 
     old_millisScreen = millis();  
   }
+
+    if (oldBrake_control != TouchObj.isBrakePressed())//check if user brake status changed for controll reasons
+    {
+      if (TouchObj.isBrakePressed())
+        Gamepad.pressButton(BRAKE_BUTTON_ON_GAMEPAD);
+      else
+        Gamepad.releaseButton(BRAKE_BUTTON_ON_GAMEPAD);
+      oldBrake_control = TouchObj.isBrakePressed();
+    }
+    if (oldBoost_control != TouchObj.isBoostPressed())//check if user boost status changed for controll reasons
+    {
+      if (TouchObj.isBoostPressed())
+        Gamepad.pressButton(BOOST_BUTTON_ON_GAMEPAD);
+      else
+        Gamepad.releaseButton(BOOST_BUTTON_ON_GAMEPAD);
+      oldBoost_control = TouchObj.isBoostPressed();
+    }
 
   Serial.print("Cycling power: ");
   Serial.println(__cyclePower);
@@ -141,7 +189,8 @@ void loop() {
   Gamepad.rightStick(0,rescaledPower);  // Z Axis, Z Rotation
   Gamepad.leftStick(rescaledSteeringVal,0);  
 
-  //delay(1000); // Delay a second between loops.
+  TouchObj.loop();
+  //delay(800); // Delay a second between loops.
 } // End of loop
 
 int limitvalue(int input,int _min, int _max)
