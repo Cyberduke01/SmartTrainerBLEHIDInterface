@@ -24,7 +24,7 @@ USBHIDGamepad Gamepad;
 #include "Brakevalue.h"
 #include "ScreenControl.h"    //Raw Communication with screen
 #include "CapTouchControl.h"
-//#include "SDControl.h"    //Raw Communication with SD card
+#include "SDControl.h"    //Raw Communication with SD card
 
 #define STEERING_POT_PIN 4
 #define STEERING_RESCALE_PIN 6
@@ -66,7 +66,7 @@ SteeringAngle SteeringAngleObj(STEERING_POT_PIN,STEERING_RESCALE_PIN);
 BrakeValue BrakeValueObj(BRAKING_PIN);
 ScreenControl ScreenObj(SCREEN_SDA,SCREEN_SCL);
 CapTouchControl TouchObj(TOUCHPIN_BRAKE,TOUCHPIN_BOOST);
-//SDControl SDcardObj(SD_MOSI, SD_MISO, SD_SCLK, SD_CS);
+SDControl SDcardObj(SD_MOSI, SD_MISO, SD_SCLK, SD_CS);
 //Functions
 int limitvalue(int input,int _min, int _max);
 
@@ -77,7 +77,6 @@ unsigned long old_millisScreen = millis();
 //to calculate the energy burnt during play
 unsigned long millisEnergy = millis();
 unsigned long old_millisEnergy = millis();
-
 
 char txtScreenBuffer[20];
 bool oldBrake_screen  = TouchObj.isBrakePressed();
@@ -97,7 +96,7 @@ void setup() {
   
   ScreenObj.begin();
   TouchObj.begin(CalibrationRequired,&ScreenObj);
-  //SDcardObj.begin();
+  SDcardObj.begin();
   BLEComm_HeartRateObj.begin();
   BLECommObj.begin();
   SteeringAngleObj.begin(CalibrationRequired,&ScreenObj);
@@ -120,7 +119,12 @@ void setup() {
 // This is the Arduino main loop function.
 void loop() {
   
-  rescaledSteeringVal = limitvalue((SteeringAngleObj.getSteeringAngle()) ,-127,127);
+//Serial.print("Deg angle pot: ");
+//Serial.println(SteeringAngleObj.getSteeringAngle_pot(), 2); //absolute position of the encoder within the 0-360 circle
+Serial.print("Deg angle magnet: ");
+Serial.println(SteeringAngleObj.getSteeringAngle_magnet(), 2); //absolute position of the encoder within the 0-360 circle
+
+  rescaledSteeringVal = limitvalue((SteeringAngleObj.getSteeringAngle_magnet()) ,-127,127);
   int rescaledPower       = limitvalue((__cyclePower*1.0/maxPower)*127.0     ,0   ,127);  
   //int rescaledbrakingperc = limitvalue((BrakeValueObj.getBrakingPerc()*1.27) ,0   ,127);
 
@@ -220,8 +224,8 @@ void loop() {
   Gamepad.leftStick(rescaledSteeringVal,0);  
 
   TouchObj.loop();
-  
-  //delay(1000); // Delay a second between loops.
+
+  delay(1000); // Delay a second between loops.
 } // End of loop
 
 int limitvalue(int input,int _min, int _max)
