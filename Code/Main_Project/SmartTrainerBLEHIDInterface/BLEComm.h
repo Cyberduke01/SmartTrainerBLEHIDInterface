@@ -8,6 +8,7 @@
 
   
 extern uint16_t __cyclePower;
+extern uint16_t __cyclePower_old;
 
 
 class BLEComm

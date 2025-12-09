@@ -41,7 +41,7 @@ void ScreenControl::OverrideLine(float _lineNo,char* text,int _size)
 {
   int x0 = 0;
   int y0 = int(this->lineHeight * _lineNo); 
-  display.fillRect(x0, y0, 128, this->lineHeight * _size, BLACK);
+  display.fillRect(x0, y0, 128, 0.5* this->lineHeight * _size, BLACK);
   SetLine(_lineNo,text,_size);
 }
 void ScreenControl::begin()

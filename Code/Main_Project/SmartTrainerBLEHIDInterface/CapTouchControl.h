@@ -23,7 +23,7 @@ class CapTouchControl
     int TouchValuesBrake[50];
     int TouchValuesBoost[50];
     
-    int numToAverage = 50;
+    int numToAverage = 10;
     int Loopcount = 0;
     //bool NumToAverageLoopsReached = false;
 

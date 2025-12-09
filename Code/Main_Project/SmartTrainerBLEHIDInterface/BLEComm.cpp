@@ -4,6 +4,7 @@
 
 
 uint16_t __cyclePower = 0;
+uint16_t __cyclePower_old = 2;
 
 // The remote service we wish to connect to.
 static BLEUUID serviceUUID("00001818-0000-1000-8000-00805f9b34fb");//EB:E1:14:76:B9:3B
@@ -159,7 +160,7 @@ BLEComm::BLEComm()
 void BLEComm::begin()
 
 {
-  Serial.println("Starting Arduino BLE Client application...");
+  Serial.println("Starting Arduino BLE Client cycle trainer application...");
   BLEDevice::init("");
 
   // Retrieve a Scanner and set the callback we want to use to be informed when we
@@ -182,9 +183,9 @@ void BLEComm::loop()
   // connected we set the connected flag to be true.
   if (doConnect == true) {
     if (connectToServer()) {
-      Serial.println("We are now connected to the BLE Server.");
+      Serial.println("We are now connected to the BLE trainer Server.");
     } else {
-      Serial.println("We have failed to connect to the server; there is nothin more we will do.");
+      Serial.println("We have failed to connect to the trainer server; there is nothin more we will do.");
     }
     doConnect = false;
   }

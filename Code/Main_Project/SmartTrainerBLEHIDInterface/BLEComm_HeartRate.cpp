@@ -4,6 +4,9 @@
 
 
 uint16_t __heartRate = 0;
+uint16_t __heartRate_old = 0;
+
+//15:06:57.007 -> HR BLE Advertised Device found: Name: Forerunner, Address: c3:3e:6a:ef:23:78, serviceUUID: 0000180d-0000-1000-8000-00805f9b34fb, rssi: -75, serviceData: 
 
 // The remote service we wish to connect to.
 static BLEUUID serviceUUID_HR("0000180d-0000-1000-8000-00805f9b34fb");
@@ -33,13 +36,13 @@ class MyClientCallback : public BLEClientCallbacks {
   uint8_t* pData,
   size_t length,
   bool isNotify) {
-    //Serial.print("Notify callback for characteristic ");
-    //Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
-   // Serial.print(" of data length ");
-  //  Serial.println(length);
+    /*Serial.print("Notify callback for HR characteristic ");
+    Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
+    Serial.print(" of data length ");
+    Serial.println(length);
 
   //this prints every individual byte in hex and base 10
-   /* for (int i = 0; i < length; i++)
+    for (int i = 0; i < length; i++)
     {
       uint8_t temp = pData[i];
 
@@ -50,15 +53,14 @@ class MyClientCallback : public BLEClientCallbacks {
       Serial.print("<==>");
       Serial.print(temp);
       Serial.println(" ");
-    }*/
+    }
 
-      //Serial.print("Heart rate: ");
-      //Serial.println( pData[1]);
-    //uint16_t power        =    (pData[3] << 8 | pData[2] );
-   // uint16_t power2       =   *(pData+2); //(pData[3] << 8 | pData[2] );
+      Serial.print("Heart rate: ");
+      Serial.println( pData[1]);*/
 
     __heartRate = pData[1];
 }
+
 
 /**
  * Scan for BLE servers and find the first one that advertises the service we are looking for.
@@ -67,8 +69,9 @@ class MyAdvertisedDeviceCallbacks_HR: public BLEAdvertisedDeviceCallbacks {
  /**
    * Called for each advertising BLE server.
    */
+   //Serial.println("checking DO connect HR");
   void onResult(BLEAdvertisedDevice advertisedDevice) {
-    Serial.print("BLE Advertised Device found: ");
+    Serial.print("HR BLE Advertised Device found: ");
     Serial.println(advertisedDevice.toString().c_str());
 
     // We have found a device, let us now see if it contains the service we are looking for.
@@ -86,7 +89,7 @@ class MyAdvertisedDeviceCallbacks_HR: public BLEAdvertisedDeviceCallbacks {
 
 
 bool BLEComm_HeartRate::connectToServer() {
-    Serial.print("Forming a connection to heart rate");
+    Serial.print("Forming a connection to heart rate: ");
     Serial.println(myDevice->getAddress().toString().c_str());
     
     BLEClient*  pClient  = BLEDevice::createClient();
@@ -98,7 +101,6 @@ bool BLEComm_HeartRate::connectToServer() {
     pClient->connect(myDevice);  // if you pass BLEAdvertisedDevice instead of address, it will be recognized type of peer device address (public or private)
     Serial.println(" - Connected to server");
     pClient->setMTU(517); //set client to request maximum MTU from server (default is 23 otherwise)
-  
     // Obtain a reference to the service we are after in the remote BLE server.
     BLERemoteService* pRemoteService = pClient->getService(serviceUUID_HR);
     if (pRemoteService == nullptr) {
@@ -166,14 +168,14 @@ void BLEComm_HeartRate::loop()
   // If the flag "doConnect" is true then we have scanned for and found the desired
   // BLE Server with which we wish to connect.  Now we connect to it.  Once we are 
   // connected we set the connected flag to be true.
-  //Serial.println("Heart rate BL loop");
+  Serial.println("Heart rate BL loop");
   if (doConnect == true) {
     
-    //Serial.println("BL server found!");
+    Serial.println("Heart rate DoConnect!");
     if (connectToServer()) {
-      Serial.println("We are now connected to the BLE Server.");
+      Serial.println("We are now connected to the BLE heart rate Server.");
     } else {
-      Serial.println("We have failed to connect to the server; there is nothin more we will do.");
+      Serial.println("We have failed to connect to the heart rate server; there is nothing more we will do.");
     }
      doConnect = false;
   }

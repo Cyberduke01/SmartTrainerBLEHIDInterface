@@ -119,8 +119,8 @@ void CapTouchControl::loop()//need to measure a value every loop such that we ar
   TouchValuesBrake[numToAverage-1] = touchRead(touchPinBrake);//replace the last val in array
   TouchValuesBoost[numToAverage-1] = touchRead(touchPinBoost);//replace the last val in array
 
-  aveTouchValueBrake = aveTouchValueBrake - TouchValBrake0Old + TouchValuesBrake[numToAverage-1];
-  aveTouchValueBoost = aveTouchValueBoost - TouchValBoost0Old + TouchValuesBoost[numToAverage-1];
+  aveTouchValueBrake = aveTouchValueBrake - TouchValBrake0Old/(numToAverage*1.0) + TouchValuesBrake[numToAverage-1]/(numToAverage*1.0);
+  aveTouchValueBoost = aveTouchValueBoost - TouchValBoost0Old/(numToAverage*1.0) + TouchValuesBoost[numToAverage-1]/(numToAverage*1.0);
 
 
 /*

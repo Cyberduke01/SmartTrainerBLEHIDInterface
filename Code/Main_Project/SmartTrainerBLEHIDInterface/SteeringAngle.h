@@ -6,7 +6,7 @@
 #include "Arduino.h"
 #include "ScreenControl.h"
 
-#define  ANGLEFILETERALPHA 0.97
+#define  ANGLEFILETERALPHA 0.7
 #define  RESCALEFILETERALPHA 0.01
 
 class SteeringAngle

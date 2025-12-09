@@ -55,8 +55,9 @@ USBHIDGamepad Gamepad;
 #define ENERGY_LINE 2
 
 int maxPower = 150; 
-int totalEnergy = 0;
-int screenUpdateRateMillis = 25;
+float totalEnergy_cal = 0;
+float old_totalEnergy_cal = -1;
+int screenUpdateRateMillis = 33;
 
 //Objects
 BLEComm BLECommObj;
@@ -83,6 +84,10 @@ bool oldBrake_screen  = TouchObj.isBrakePressed();
 bool oldBrake_control = TouchObj.isBrakePressed();
 bool oldBoost_control = TouchObj.isBoostPressed();
 bool oldBoost_screen  = TouchObj.isBoostPressed();
+int touch_control_case = 5;
+
+int rescaledSteeringVal = 0;
+int rescaledSteeringVal_old = -1;
 
 void setup() {
   Serial.begin(115200);
@@ -102,38 +107,49 @@ void setup() {
 
   ScreenObj.ClearScreen();
 
-  
-
   old_millisBLE = millis();     
   old_millisScreen = millis(); 
 
   millisEnergy = millis();
   old_millisEnergy = millis();
+
+  ScreenObj.SetLine(ENERGY_LINE-0.5," HR      Energy[Cal]",1);
 } // End of setup.
 
 
 // This is the Arduino main loop function.
 void loop() {
   
-  int rescaledSteeringVal = limitvalue((SteeringAngleObj.getSteeringAngle()) ,-127,127);
+  rescaledSteeringVal = limitvalue((SteeringAngleObj.getSteeringAngle()) ,-127,127);
   int rescaledPower       = limitvalue((__cyclePower*1.0/maxPower)*127.0     ,0   ,127);  
   //int rescaledbrakingperc = limitvalue((BrakeValueObj.getBrakingPerc()*1.27) ,0   ,127);
 
   if ((millis() - old_millisBLE) > 1000)//once every second we get data from bluetooth
   {
     BLECommObj.loop();
-    //BLEComm_HeartRateObj.loop();
+    BLEComm_HeartRateObj.loop();
     
-    //it only makes sense to update power on screen if we actually have a new power 
-    sprintf(txtScreenBuffer, "%dw /%dw",rescaledPower,maxPower);
-    ScreenObj.OverrideLine(0,txtScreenBuffer,2); 
-    ScreenObj.DrawProgressBar(THROTTLE_LINE,THROTTLE_THICK,(rescaledPower*(100.0/127.0)),1);//(int _lineNo, float barHeight, int progress, int dir)//height is percentage of lineheight
+    if (__cyclePower != __cyclePower_old)
+    {
+            //it only makes sense to update power on screen if we actually have a new power 
+      sprintf(txtScreenBuffer, "%dw /%dw",__cyclePower,maxPower);
+      ScreenObj.OverrideLine(0,txtScreenBuffer,2); 
+      ScreenObj.DrawProgressBar(THROTTLE_LINE,THROTTLE_THICK,(rescaledPower*(100.0/127.0)),1);//(int _lineNo, float barHeight, int progress, int dir)//height is percentage of lineheight
+      __cyclePower_old = __cyclePower;
+    }
 
     millisEnergy = millis();
-    totalEnergy += ((millisEnergy - old_millisEnergy)/1000.0) * __cyclePower;
+    totalEnergy_cal += ((millisEnergy - old_millisEnergy)/1000.0) * __cyclePower * 0.000239006;
     old_millisEnergy = millisEnergy;
-    sprintf(txtScreenBuffer, "E: %d Cal",int(totalEnergy*(0.000239006)));
-    ScreenObj.OverrideLine(ENERGY_LINE,txtScreenBuffer,2); 
+
+    if ((int(old_totalEnergy_cal) != int(totalEnergy_cal)) || (__heartRate != __heartRate_old))//we put heart rate and energy in the same line... for now
+    {
+      sprintf(txtScreenBuffer, "%d | %d",__heartRate,int(totalEnergy_cal));
+      //sprintf(txtScreenBuffer, "%d | %d Cal",888,8888);
+      ScreenObj.OverrideLine(ENERGY_LINE,txtScreenBuffer,2);
+      old_totalEnergy_cal = totalEnergy_cal;
+      __heartRate_old = __heartRate;
+    }
 
     old_millisBLE = millis();
   }
@@ -143,16 +159,32 @@ void loop() {
     bool isBrakePressed = TouchObj.isBrakePressed();
     bool isBoostPressed = TouchObj.isBoostPressed();
 
-    if (isBrakePressed && !isBoostPressed)//DrawDoubleDirProgressBar(int _lineNo, float barHeight, int progress)
-      ScreenObj.DrawDoubleDirProgressBar(CAP_TOUCH_LINE,CAP_TOUCH_THICK,100); 
-    if (isBoostPressed && !isBrakePressed)
+    if (isBrakePressed && !isBoostPressed && (touch_control_case != 0))//DrawDoubleDirProgressBar(int _lineNo, float barHeight, int progress)
+    {
+      ScreenObj.DrawDoubleDirProgressBar(CAP_TOUCH_LINE,CAP_TOUCH_THICK,100);
+      touch_control_case = 0; 
+    }      
+    if (isBoostPressed && !isBrakePressed && (touch_control_case != 1))
+    {
       ScreenObj.DrawDoubleDirProgressBar(CAP_TOUCH_LINE,CAP_TOUCH_THICK,-100);
-    if (isBrakePressed && isBoostPressed)     
+      touch_control_case = 1;
+    }
+    if (isBrakePressed && isBoostPressed && (touch_control_case != 2))
+    {
       ScreenObj.DrawProgressBar(CAP_TOUCH_LINE,CAP_TOUCH_THICK,100,1);//(int _lineNo, float barHeight, int progress, int dir)//height is percentage of lineheight
-    if (!isBoostPressed && !isBrakePressed)     
-      ScreenObj.DrawProgressBar(CAP_TOUCH_LINE,CAP_TOUCH_THICK,0,1);//(int _lineNo, float barHeight, int progress, int dir)//height is percentage of lineheight
+      touch_control_case = 2;
+    }     
+    if (!isBoostPressed && !isBrakePressed && (touch_control_case != 3))    
+    {
+      ScreenObj.DrawProgressBar(CAP_TOUCH_LINE,CAP_TOUCH_THICK,1,1);//(int _lineNo, float barHeight, int progress, int dir)//height is percentage of lineheight
+      touch_control_case = 3;
+    } 
 
-    ScreenObj.DrawDoubleDirProgressBar(STEER_LINE,STEER_THICK,rescaledSteeringVal*(-100.0/127.0));
+    if (rescaledSteeringVal != rescaledSteeringVal_old)
+    {
+      ScreenObj.DrawDoubleDirProgressBar(STEER_LINE,STEER_THICK,rescaledSteeringVal*(-100.0/127.0));
+      rescaledSteeringVal_old = rescaledSteeringVal;
+    }
     old_millisScreen = millis();  
   }
 
@@ -173,7 +205,7 @@ void loop() {
       oldBoost_control = TouchObj.isBoostPressed();
     }
 
-  Serial.print("Cycling power: ");
+  /*Serial.print("Cycling power: ");
   Serial.println(__cyclePower);
 
   Serial.print("Steering Angle: ");
@@ -182,13 +214,14 @@ void loop() {
   Serial.print("Heart Rate: ");
   Serial.println(__heartRate);
 
-  Serial.println("%");
+  Serial.println("%");*/
 
   Gamepad.rightStick(0,rescaledPower);  // Z Axis, Z Rotation
   Gamepad.leftStick(rescaledSteeringVal,0);  
 
   TouchObj.loop();
-  //delay(800); // Delay a second between loops.
+  
+  //delay(1000); // Delay a second between loops.
 } // End of loop
 
 int limitvalue(int input,int _min, int _max)
