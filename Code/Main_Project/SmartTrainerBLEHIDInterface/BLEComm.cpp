@@ -98,6 +98,10 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
   } // onResult
 }; // MyAdvertisedDeviceCallbacks
 
+bool BLEComm::isConnected()
+{
+  return connected;
+}
 
 bool BLEComm::connectToServer() {
     Serial.print("Forming a connection to ");

@@ -12,7 +12,7 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
 {
   if (calibtration)
   {
-    //  delay(1000000); // Delay a second between loops.
+    //delay(900000); // Delay a second between loops.
 
     int countdowntime = 3;
     char txtScreenBuffer[50];

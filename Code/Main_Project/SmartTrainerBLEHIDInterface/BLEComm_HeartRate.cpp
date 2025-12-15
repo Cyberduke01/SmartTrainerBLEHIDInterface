@@ -163,6 +163,11 @@ void BLEComm_HeartRate::begin()
 
 }
 
+bool BLEComm_HeartRate::isConnected()
+{
+  return connected;
+}
+
 void BLEComm_HeartRate::loop()
 {
   // If the flag "doConnect" is true then we have scanned for and found the desired

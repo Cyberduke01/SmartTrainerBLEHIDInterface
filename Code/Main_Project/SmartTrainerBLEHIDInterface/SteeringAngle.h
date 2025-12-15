@@ -22,6 +22,8 @@ class SteeringAngle
     
   private:
 
+  ScreenControl* screen;
+
   void loop();
   int steeringPotPin;
   int steeringRescalePotPin;

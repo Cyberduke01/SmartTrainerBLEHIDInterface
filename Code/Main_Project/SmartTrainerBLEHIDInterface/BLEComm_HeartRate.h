@@ -13,6 +13,7 @@ class BLEComm_HeartRate
 
   public:
     BLEComm_HeartRate();
+    bool isConnected();
     void begin();
     void loop();
     

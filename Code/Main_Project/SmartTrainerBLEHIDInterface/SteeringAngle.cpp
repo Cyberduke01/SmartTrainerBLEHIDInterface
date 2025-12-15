@@ -16,7 +16,16 @@ float SteeringAngle::getSteeringAngle_magnet()
   Wire.endTransmission(); //end transmission
   Wire.requestFrom(0x36, 1); //request from the sensor
 
-  while(Wire.available() == 0); //wait until it becomes available 
+  
+  unsigned long millisStart = millis();
+  while(Wire.available() == 0)
+  {
+    if ((millis() - millisStart) > 3000)
+    {
+      this->screen->ClearScreen();
+      this->screen->OverrideLine(0,"Error! Magnetic sensor not reachable",2);
+    }
+  } //wait until it becomes available and notify user if no sucess after 3 seconds
   lowbyte = Wire.read(); //Reading the data after the request
  
   //11:8 - 4 bits
@@ -38,8 +47,8 @@ float SteeringAngle::getSteeringAngle_magnet()
   //Multiply the output of the encoder with 0.087890625
   this->degAngleMagnetmin1 = this->degAngleMagnet0;
   this->degAngleMagnet0 = rawAngle * 0.087890625;
-  
-  return this->steeringRescaleFactor * (ANGLEFILETERALPHA * this->degAngleMagnet0 + (1-ANGLEFILETERALPHA)*this->degAngleMagnetmin1);
+  //return this->steeringRescaleFactor * (ANGLEFILETERALPHA * this->degAngleMagnet0 + (1-ANGLEFILETERALPHA)*this->degAngleMagnetmin1);
+  return (ANGLEFILETERALPHA * this->degAngleMagnet0 + (1-ANGLEFILETERALPHA)*this->degAngleMagnetmin1);
 }
 
 
@@ -105,6 +114,7 @@ void SteeringAngle::countdown(int seconds,ScreenControl *screen)
 void SteeringAngle::begin(bool calibtration,ScreenControl *screen)
 {
   int countdowntime = 3;
+  this->screen = screen;
   if (calibtration)
   {
     //DAC Setup

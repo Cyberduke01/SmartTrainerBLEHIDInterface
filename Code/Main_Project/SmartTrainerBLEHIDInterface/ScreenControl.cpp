@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "ScreenControl.h"
+#include <Fonts/FreeSerif11pt7b.h>
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);//Screen width , Screen height,wire , reset pin
 
@@ -37,6 +38,18 @@ void ScreenControl::DrawDoubleDirProgressBar(float _lineNo, float barHeight, int
   display.display();
 }
 
+void ScreenControl::OverrideLine_smallerFont(float _lineNo,char* text,int _size)
+{
+  int x0 = 0;
+  int y0 = int(this->lineHeight * _lineNo); 
+  display.fillRect(x0, y0, 128, this->lineHeight * _size, BLACK);
+  display.setTextSize(_size);
+  display.setCursor(0, 7+int(_lineNo * this->lineHeight));//x and y position to start writing
+  display.setFont(&FreeSerif11pt7b);
+  display.println(text);
+  display.display();
+  display.setFont();
+}
 void ScreenControl::OverrideLine(float _lineNo,char* text,int _size)
 {
   int x0 = 0;

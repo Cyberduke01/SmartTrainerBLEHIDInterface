@@ -17,6 +17,7 @@ class ScreenControl
 
     void SetLine(float lineNo,char* text, int _size);
     void OverrideLine(float lineNo,char* text, int _size);
+    void OverrideLine_smallerFont(float lineNo,char* text, int _size);
     void DrawProgressBar(float _lineNo, float barHeight, int progress, int dir);
     void DrawDoubleDirProgressBar(float _lineNo, float barHeight, int progress);
     void ClearScreen();
@@ -27,6 +28,7 @@ class ScreenControl
 
     int textSize = 2;
     int lineHeight = 15;//for spacing of the lines
+    int smallerfontlineHeight = 10;//for spacing of the lines
 
     static const int screenWidth = 128;
     static const int screenHeight= 64;

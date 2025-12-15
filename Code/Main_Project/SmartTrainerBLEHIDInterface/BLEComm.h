@@ -16,7 +16,7 @@ class BLEComm
 
   public:
 
-
+    bool isConnected();
     BLEComm();
     void begin();
     void loop();
