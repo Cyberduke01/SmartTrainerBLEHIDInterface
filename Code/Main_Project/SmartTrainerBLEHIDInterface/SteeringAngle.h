@@ -7,7 +7,7 @@
 #include "ScreenControl.h"
 
 #define  ANGLEFILETERALPHA 0.7
-#define  RESCALEFILETERALPHA 0.01
+#define  RESCALEFILETERALPHA 0.005
 
 class SteeringAngle
 {
@@ -25,6 +25,7 @@ class SteeringAngle
   ScreenControl* screen;
 
   void loop();
+  int loopint(float in, int min,int max);
   int steeringPotPin;
   int steeringRescalePotPin;
   

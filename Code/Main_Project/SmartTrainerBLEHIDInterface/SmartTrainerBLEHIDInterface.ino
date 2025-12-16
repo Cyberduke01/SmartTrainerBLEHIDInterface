@@ -168,11 +168,7 @@ void loop() {
     IrReceiver.resume(); // Receive the next value
   }*/
 
-//Serial.print("Deg angle pot: ");
-//Serial.println(SteeringAngleObj.getSteeringAngle_pot(), 2); //absolute position of the encoder within the 0-360 circle
-//Serial.print("Deg angle magnet: ");
-//float mag = SteeringAngleObj.getSteeringAngle_magnet();
-////Serial.println(mag, 2); //absolute position of the encoder within the 0-360 circle
+
 if (elapsed_workout_seconds > 59)
 {
   elapsed_workout_seconds = 0;
@@ -188,7 +184,7 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
    //remote_debounce_count = millis();
     if((millis() - remote_debounce_count) > REMOTE_DEBOUNCE_THRESHOLD_MILLIS)
     {
-      Serial.println(IrReceiver.decodedIRData.command, HEX); // Print the HEX ID
+      //Serial.println(IrReceiver.decodedIRData.command, HEX); // Print the HEX ID
       remote_debounce_count = millis();
       
       if (IrReceiver.decodedIRData.command == REMOTE_RIGHT_ARROW)
@@ -230,7 +226,7 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
         {
           Serial.println("PAUSING");
           currentSystemState = PAUSED;
-          //ok_press_count = 0 ;
+          //ok_press_count =                                                                          0 ;
         }
         if ((ok_press_count > 6) && ((currentSystemState == PLAYING)||(currentSystemState == PAUSED)))//if we held ok button for around 3 seconds
         {
@@ -265,8 +261,7 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
   if ((millis() - ok_press_count_time) > TIME_TO_START_OK_BUTTON_LIFTOFF_MILLIS) //if the user hasnt been pressing OK for more than a certain amount of time
     ok_press_count = 0;
 
-  float mag = SteeringAngleObj.getSteeringAngle_magnet();
-  rescaledSteeringVal = limitvalue((SteeringAngleObj.getSteeringAngle_pot()) ,-127,127);
+  rescaledSteeringVal = limitvalue((SteeringAngleObj.getSteeringAngle_magnet()) ,-127,127);
   int rescaledPower   = limitvalue((__cyclePower*1.0/maxPower)*127.0     ,0   ,127);  
   //int rescaledbrakingperc = limitvalue((BrakeValueObj.getBrakingPerc()*1.27) ,0   ,127);
 
@@ -322,6 +317,7 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
     }      
     if (isBoostPressed && !isBrakePressed && (touch_control_case != 1))
     {
+      Serial.println("showleft");
       ScreenObj.DrawDoubleDirProgressBar(CAP_TOUCH_LINE,CAP_TOUCH_THICK,-100);
       touch_control_case = 1;
     }
@@ -381,7 +377,7 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
   }
 
 
- // delay(1000); // Delay a second between loops.
+  //delay(1000); // Delay a second between loops.
 } // End of loop
 
 int limitvalue(int input,int _min, int _max)

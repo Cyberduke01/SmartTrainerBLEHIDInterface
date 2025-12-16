@@ -48,7 +48,7 @@ float SteeringAngle::getSteeringAngle_magnet()
   this->degAngleMagnetmin1 = this->degAngleMagnet0;
   this->degAngleMagnet0 = rawAngle * 0.087890625;
   //return this->steeringRescaleFactor * (ANGLEFILETERALPHA * this->degAngleMagnet0 + (1-ANGLEFILETERALPHA)*this->degAngleMagnetmin1);
-  return (ANGLEFILETERALPHA * this->degAngleMagnet0 + (1-ANGLEFILETERALPHA)*this->degAngleMagnetmin1);
+  return -1*this->steeringRescaleFactor * this->loopint((ANGLEFILETERALPHA * this->degAngleMagnet0 + (1-ANGLEFILETERALPHA)*this->degAngleMagnetmin1) - 180 +83.6,-180,180); // the middle HAS AN OFFSET
 }
 
 
@@ -111,9 +111,17 @@ void SteeringAngle::countdown(int seconds,ScreenControl *screen)
   }
 }
 
+int SteeringAngle::loopint(float in, int min,int max)
+{
+  if (in > max)
+    return (int)(min+in-max);
+  if (in < min)
+    return (int)(min-in);
+  return (int)in;
+}
 void SteeringAngle::begin(bool calibtration,ScreenControl *screen)
 {
-  int countdowntime = 3;
+  /*int countdowntime = 3;
   this->screen = screen;
   if (calibtration)
   {
@@ -159,6 +167,6 @@ void SteeringAngle::begin(bool calibtration,ScreenControl *screen)
     screen->SetLine(1,txtScreenBuffer2,1);
 
     delay(10000);
-  }
+  }*/
  }
       

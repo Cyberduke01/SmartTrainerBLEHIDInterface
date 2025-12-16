@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "CapTouchControl.h"
-
+//I know its stupid, but break is defined as the right touch pad
  
 CapTouchControl::CapTouchControl(int _touchPinBrake, int _touchPinBoost)
 {
@@ -12,13 +12,14 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
 {
   if (calibtration)
   {
-    //delay(900000); // Delay a second between loops.
-
+    delay(1000); // Delay a second for the touch to start
+    this->Loopcount = 0;
     int countdowntime = 3;
     char txtScreenBuffer[50];
     char txtScreenBuffer2[50];
-
-    for (int t = 0;t<this->numToAverage+5;t++)
+    Serial.println("doing intital Ave");
+    Serial.println("========================");
+    for (int t = 0;t<this->numToAverage+2;t++)
       this->loop();
     //Lets calibrate the touch for the Brake!
     screen->ClearScreen();
@@ -27,7 +28,9 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
     screen->SetLine(2,"value will be captured soon",1);
     delay(5000);
     countdown(countdowntime,screen);
-    for (int t = 0;t<this->numToAverage+5;t++)//make sure the value we are reading is an average of "touched"
+    Serial.println("doing brake non touched");
+    Serial.println("========================");
+    for (int t = 0;t<this->numToAverage+2;t++)//make sure the value we are reading is an average of "touched"
       this->loop();
     touchValueMin_Brake = aveTouchValueBrake;//read value when no brake is pressed
     screen->ClearScreen();
@@ -36,7 +39,9 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
     screen->SetLine(2,"value will be captured soon",1);
     delay(5000);
     countdown(countdowntime,screen);
-    for (int t = 0;t<this->numToAverage+5;t++)//make sure the value we are reading is an average of "touched"
+    Serial.println("doing brake touched");
+    Serial.println("========================");
+    for (int t = 0;t<this->numToAverage+2;t++)//make sure the value we are reading is an average of "touched"
       this->loop();
     touchValueMax_Brake = aveTouchValueBrake;//read value when brake is fully pressed
     screen->ClearScreen();
@@ -59,7 +64,10 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
     screen->SetLine(2,"value will be captured soon",1);
     delay(5000);
     countdown(countdowntime,screen);
-    for (int t = 0;t<this->numToAverage+5;t++)//make sure the value we are reading is an average of "touched"
+        Serial.println("doing boost non touched");
+    Serial.println("========================");
+
+    for (int t = 0;t<this->numToAverage+2;t++)//make sure the value we are reading is an average of "touched"
       this->loop();
     touchValueMin_Boost = aveTouchValueBoost;//read value when no brake is pressed
     screen->ClearScreen();
@@ -68,7 +76,10 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
     screen->SetLine(2,"value will be captured soon",1);
     delay(5000);
     countdown(countdowntime,screen);
-    for (int t = 0;t<this->numToAverage+5;t++)//make sure the value we are reading is an average of "touched"
+        Serial.println("doing boost touched");
+    Serial.println("========================");
+
+    for (int t = 0;t<this->numToAverage+2;t++)//make sure the value we are reading is an average of "touched"
       this->loop();
     touchValueMax_Boost = aveTouchValueBoost;//read value when brake is fully pressed
     screen->ClearScreen();
@@ -92,11 +103,10 @@ void CapTouchControl::loop()//need to measure a value every loop such that we ar
   if (Loopcount<numToAverage)
   {
     TouchValuesBrake[Loopcount] = touchRead(touchPinBrake);
-    TouchValuesBoost[Loopcount] = touchRead(touchPinBoost);
-    Loopcount++; 
+    TouchValuesBoost[Loopcount] = touchRead(touchPinBoost); 
 
-    aveTouchValueBrake = touchRead(touchPinBrake);
-    aveTouchValueBoost = touchRead(touchPinBoost);
+    aveTouchValueBrake = TouchValuesBrake[Loopcount];
+    aveTouchValueBoost = TouchValuesBoost[Loopcount];
   }
   if (Loopcount==numToAverage)
   {
@@ -108,35 +118,26 @@ void CapTouchControl::loop()//need to measure a value every loop such that we ar
     for (int t = 0;t<numToAverage;t++)
       aveTouchValueBoost += TouchValuesBoost[t]/(numToAverage*1.0);
   }
-
-  int TouchValBrake0Old = TouchValuesBrake[0];
-  int TouchValBoost0Old = TouchValuesBoost[0];
-
-  for (int t=0;t<numToAverage-1;t++)//move all one up
+  if (Loopcount>numToAverage)
   {
-    TouchValuesBrake[t] = TouchValuesBrake[t+1];
-    TouchValuesBoost[t] = TouchValuesBoost[t+1];
+
+    int TouchValBrake0Old = TouchValuesBrake[0];
+    int TouchValBoost0Old = TouchValuesBoost[0];
+
+    for (int t=0;t<numToAverage-1;t++)//move all one up
+    {
+      TouchValuesBrake[t] = TouchValuesBrake[t+1];
+      TouchValuesBoost[t] = TouchValuesBoost[t+1];
+    }
+      
+    TouchValuesBrake[numToAverage-1] = touchRead(touchPinBrake);//replace the last val in array
+    TouchValuesBoost[numToAverage-1] = touchRead(touchPinBoost);//replace the last val in array
+
+    aveTouchValueBrake = aveTouchValueBrake - TouchValBrake0Old/(numToAverage*1.0) + TouchValuesBrake[numToAverage-1]/(numToAverage*1.0);
+    aveTouchValueBoost = aveTouchValueBoost - TouchValBoost0Old/(numToAverage*1.0) + TouchValuesBoost[numToAverage-1]/(numToAverage*1.0);
   }
-    
-  TouchValuesBrake[numToAverage-1] = touchRead(touchPinBrake);//replace the last val in array
-  TouchValuesBoost[numToAverage-1] = touchRead(touchPinBoost);//replace the last val in array
 
-  aveTouchValueBrake = aveTouchValueBrake - TouchValBrake0Old/(numToAverage*1.0) + TouchValuesBrake[numToAverage-1]/(numToAverage*1.0);
-  aveTouchValueBoost = aveTouchValueBoost - TouchValBoost0Old/(numToAverage*1.0) + TouchValuesBoost[numToAverage-1]/(numToAverage*1.0);
-
-
-/*
-  Serial.print("TouchCurr BOOST: ");
-  Serial.println(TouchValuesBoost[numToAverage-1]);
-  Serial.print("TouchAve BOOSET: ");
-  Serial.println(aveTouchValueBoost);
-
-  Serial.print("TouchCurr BRAKE: ");
-  Serial.println(TouchValuesBrake[numToAverage-1]);
-  Serial.print("TouchAve BRAKE: ");
-  Serial.println(aveTouchValueBrake);
-      //aveTouchValueBoost;
-*/
+  Loopcount++;
 }
 
 
