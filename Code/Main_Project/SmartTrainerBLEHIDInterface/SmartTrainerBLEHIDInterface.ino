@@ -22,10 +22,11 @@ USBHIDGamepad Gamepad;
 #include "BLEComm.h"            //Communication with smart trainer
 #include "BLEComm_HeartRate.h"  //Communication with heart rate device
 #include "SteeringAngle.h"
-#include "Brakevalue.h"
+//#include "Brakevalue.h"
 #include "ScreenControl.h"    //Raw Communication with screen
 #include "CapTouchControl.h"
-#include "SDControl.h"    //Raw Communication with SD card
+//#include "SDControl.h"    //Raw Communication with SD card
+#include "Workout.h"
 
 #define STEERING_POT_PIN 4
 #define STEERING_RESCALE_PIN 6
@@ -79,14 +80,19 @@ int elapsed_workout_hours = 0;
 int elapsed_workout_minutes = 0;
 int elapsed_workout_seconds = 0;
 
+bool seconds_updated = true;
+
 //Objects
 BLEComm BLECommObj;
 BLEComm_HeartRate BLEComm_HeartRateObj;
+
+
 SteeringAngle SteeringAngleObj(STEERING_POT_PIN,STEERING_RESCALE_PIN);
-BrakeValue BrakeValueObj(BRAKING_PIN);
+//BrakeValue BrakeValueObj(BRAKING_PIN);
 ScreenControl ScreenObj(SCREEN_SDA,SCREEN_SCL);
 CapTouchControl TouchObj(TOUCHPIN_BRAKE,TOUCHPIN_BOOST);
-SDControl SDcardObj(SD_MOSI, SD_MISO, SD_SCLK, SD_CS);
+//SDControl SDcardObj(SD_MOSI, SD_MISO, SD_SCLK, SD_CS);
+Workout WorkoutObj(&ScreenObj);
 //Functions
 int limitvalue(int input,int _min, int _max);
 int loopint(int in, int max);
@@ -129,7 +135,7 @@ void setup() {
   
   ScreenObj.begin();
   TouchObj.begin(CalibrationRequired,&ScreenObj);
-  SDcardObj.begin();
+//  SDcardObj.begin();
   BLEComm_HeartRateObj.begin();
   BLECommObj.begin();
   SteeringAngleObj.begin(CalibrationRequired,&ScreenObj);
@@ -180,6 +186,17 @@ if (elapsed_workout_seconds > 59)
   }
 }
 
+if ((seconds_updated) && (currentSystemState == PLAYING))//save new data to workout if we are currently having a workout
+{
+  //if (currentSystemState == PLAYING)
+  elapsed_workout_seconds++;
+  if (!WorkoutObj.AddDataPoint(__heartRate,__cyclePower))
+    WorkoutObj.SaveWorkout(int(totalEnergy_cal));
+
+  seconds_updated = false;
+}
+
+
 if (IrReceiver.decode()) {//if the user pressed a button on the remote
    //remote_debounce_count = millis();
     if((millis() - remote_debounce_count) > REMOTE_DEBOUNCE_THRESHOLD_MILLIS)
@@ -206,10 +223,12 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
         ok_press_count++;
         Serial.println(ok_press_count);
         ok_press_count_time = millis();
-        if ((ok_press_count > 6) && (currentSystemState == IDLE))//if we held ok button for around 3 seconds
+        if ((ok_press_count > 5) && (currentSystemState == IDLE))//if we held ok button for around 3 seconds
         {
-          Serial.println("START");
+          Serial.println("START");//If we started a workout
           currentSystemState = PLAYING;
+          WorkoutObj.BeginWorkout();
+          power_screen_update = true;
           elapsed_workout_hours = 0;
           elapsed_workout_minutes = 0;
           elapsed_workout_seconds = 0;
@@ -226,13 +245,14 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
         {
           Serial.println("PAUSING");
           currentSystemState = PAUSED;
-          //ok_press_count =                                                                          0 ;
         }
-        if ((ok_press_count > 6) && ((currentSystemState == PLAYING)||(currentSystemState == PAUSED)))//if we held ok button for around 3 seconds
+        if ((ok_press_count > 5) && ((currentSystemState == PLAYING)||(currentSystemState == PAUSED)))//if we held ok button for around 3 seconds
         {
           Serial.println("ENDING");
           currentSystemState = IDLE;
           ok_press_count = 0;
+          power_screen_update = true;
+          WorkoutObj.SaveWorkout(int(totalEnergy_cal));
         }
       }
 
@@ -267,8 +287,9 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
 
   if ((millis() - old_millisBLE) > 1000)//once every second we get data from bluetooth
   {
-    BLECommObj.loop();
-    BLEComm_HeartRateObj.loop();
+    BLECommObj.loop();//let the power update
+    BLEComm_HeartRateObj.loop();//let the heartrate update
+
     
     if ((__cyclePower != __cyclePower_old) || power_screen_update)
     {
@@ -281,7 +302,7 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
     }
 
     millisEnergy = millis();
-    totalEnergy_cal += ((millisEnergy - old_millisEnergy)/1000.0) * __cyclePower * 0.000239006;
+    totalEnergy_cal += (4.0*(((millisEnergy - old_millisEnergy)/1000.0) * __cyclePower * 0.000239006));
     old_millisEnergy = millisEnergy;
 
     if ((dataFielsToShow == HR_ENERGY) && ((int(old_totalEnergy_cal) != int(totalEnergy_cal)) || (__heartRate != __heartRate_old)))//so if we have the right screen, and both the HR and energy updated  or the user changed data screen
@@ -317,7 +338,7 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
     }      
     if (isBoostPressed && !isBrakePressed && (touch_control_case != 1))
     {
-      Serial.println("showleft");
+      //Serial.println("showleft");
       ScreenObj.DrawDoubleDirProgressBar(CAP_TOUCH_LINE,CAP_TOUCH_THICK,-100);
       touch_control_case = 1;
     }
@@ -363,7 +384,7 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
 
   TouchObj.loop();
 
-  if ((millis() - millisBLCheck) > 10000)//try to reconnect if BL is disconnected, needs debugging!
+  /*if ((millis() - millisBLCheck) > 1000)//try to reconnect if BL is disconnected, needs debugging!
   {
       if (!BLEComm_HeartRateObj.isConnected())
       {
@@ -374,7 +395,7 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
         BLECommObj.begin();
       }
       millisBLCheck = millis();
-  }
+  }*/
 
 
   //delay(1000); // Delay a second between loops.
@@ -400,8 +421,7 @@ int loopint(int in, int max)
 }
 
 void IRAM_ATTR onTimer(){
-  if (currentSystemState == PLAYING)
-    elapsed_workout_seconds++;
+  seconds_updated = true;
 }
 
 #endif /* ARDUINO_USB_MODE */

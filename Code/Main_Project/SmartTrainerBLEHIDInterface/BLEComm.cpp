@@ -34,45 +34,44 @@ class MyClientCallback : public BLEClientCallbacks {
   uint8_t* pData,
   size_t length,
   bool isNotify) {
-    //Serial.print("Notify callback for characteristic ");
-    //Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
-    //Serial.print(" of data length ");
-    //Serial.println(length);
+    /*Serial.print("Notify callback for characteristic ");
+    Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
+    Serial.print(" of data length ");
+    Serial.println(length);*/
 
   //this prints every individual byte in hex and base 10
-  /*  for (int i = 0; i < length; i++)
+   /* for (int i = 0; i < length; i++)
     {
       uint8_t temp = pData[i];
 
       Serial.print("i = ");
       Serial.print(i);
       Serial.print(": ");
-      Serial.print(temp,HEX);
-      Serial.print("<==>");
+      //Serial.print(temp,HEX);
+      //Serial.print("<==>");
       Serial.print(temp);
       Serial.println(" ");
     }*/
 
  
-    uint16_t power        =    (pData[3] << 8 | pData[2] );
-    uint16_t power2       =   *(pData+2); //(pData[3] << 8 | pData[2] );
+    uint16_t power             =    (pData[3]  << 8  | pData[2]);
+    uint16_t revolutions_wheel =    (pData[7]  << 24 | pData[6] << 16 | pData[5] << 8 | pData[4]);//cumulative revolution
+    uint16_t timestamp_wheel   =    (pData[9]  << 8  | pData[8]);//last revolution event time
+    uint16_t revolutions_crank =    (pData[11] << 8  | pData[10]);//cumulative crank revolution
+    uint16_t timestamp_crank   =    (pData[13] << 8  | pData[12]);//last crank event time*/
+   
 
     __cyclePower = power;
-    //*__cycling_Power =  (pData[3] << 8 | pData[2] );
-    
-    uint16_t revolutions =  power;
 
-    //Serial.print("Power: ");
-    //Serial.println(power);
+    /*Serial.print("timestamp_wheel: ");
+    Serial.println(revolutions_wheel);
+    Serial.print("timestamp_wheel: ");
+    Serial.println(timestamp_wheel);
 
-    //Serial.print("Power2: ");
-    //Serial.println(power2);
-
-    //Serial.print("Revolutions: ");
-    //Serial.println(revolutions);
-
-    //Serial.write(pData, length);
-    //Serial.println();
+    Serial.print("Revolutions_crank: ");
+    Serial.println(revolutions_crank);
+    Serial.print("timestamp_crank: ");
+    Serial.println(timestamp_crank);*/
 }
 
 /**

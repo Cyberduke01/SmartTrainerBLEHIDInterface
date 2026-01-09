@@ -34,8 +34,8 @@ class CapTouchControl
 
     
     void countdown(int seconds,ScreenControl *screen);
-    int touchValueMin_Brake = 67928;//47922; // Change these values for brake calibration!!!!
-    int touchValueMax_Brake = 166004;//179104;
+    int touchValueMin_Brake = 64528;//47922; // Change these values for brake calibration!!!!
+    int touchValueMax_Brake = 166000;//179104;
     int touchThreshold_Brake = touchValueMax_Brake-touchValueMin_Brake/2.0;
 
     int touchValueMin_Boost = 76010;//46484; // Change these values for brake calibration!!!!

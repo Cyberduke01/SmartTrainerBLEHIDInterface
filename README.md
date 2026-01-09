@@ -13,9 +13,6 @@ Additional usefull information:
 - Copy the FreeSerif11pt7b.h and FreeSerif10pt7b.h files from the fonts folder to the arduino fonts folder. In windows usually: (\Documents\Arduino\libraries\Adafruit_GFX_Library\Fonts)
 - The website https://rop.nl/truetype2gfx/ can be used to generate custom GFX fonts.
 
-## "standards" used in build
+## helpfull links
 
-- cables from sensors, 
--	"plus"  = 1
--	"Minus" = 2
--	signal  = green
+https://teaandtechtime.com/arduino-ble-cycling-power-service/

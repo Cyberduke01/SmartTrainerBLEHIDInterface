@@ -17,8 +17,8 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
     int countdowntime = 3;
     char txtScreenBuffer[50];
     char txtScreenBuffer2[50];
-    Serial.println("doing intital Ave");
-    Serial.println("========================");
+   // Serial.println("doing intital Ave");
+    //Serial.println("========================");
     for (int t = 0;t<this->numToAverage+2;t++)
       this->loop();
     //Lets calibrate the touch for the Brake!
@@ -28,8 +28,8 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
     screen->SetLine(2,"value will be captured soon",1);
     delay(5000);
     countdown(countdowntime,screen);
-    Serial.println("doing brake non touched");
-    Serial.println("========================");
+    //Serial.println("doing brake non touched");
+   // Serial.println("========================");
     for (int t = 0;t<this->numToAverage+2;t++)//make sure the value we are reading is an average of "touched"
       this->loop();
     touchValueMin_Brake = aveTouchValueBrake;//read value when no brake is pressed
@@ -39,8 +39,8 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
     screen->SetLine(2,"value will be captured soon",1);
     delay(5000);
     countdown(countdowntime,screen);
-    Serial.println("doing brake touched");
-    Serial.println("========================");
+    //Serial.println("doing brake touched");
+    //Serial.println("========================");
     for (int t = 0;t<this->numToAverage+2;t++)//make sure the value we are reading is an average of "touched"
       this->loop();
     touchValueMax_Brake = aveTouchValueBrake;//read value when brake is fully pressed
@@ -64,8 +64,8 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
     screen->SetLine(2,"value will be captured soon",1);
     delay(5000);
     countdown(countdowntime,screen);
-        Serial.println("doing boost non touched");
-    Serial.println("========================");
+        //Serial.println("doing boost non touched");
+    //Serial.println("========================");
 
     for (int t = 0;t<this->numToAverage+2;t++)//make sure the value we are reading is an average of "touched"
       this->loop();
@@ -76,8 +76,8 @@ void CapTouchControl::begin(bool calibtration,ScreenControl *screen)
     screen->SetLine(2,"value will be captured soon",1);
     delay(5000);
     countdown(countdowntime,screen);
-        Serial.println("doing boost touched");
-    Serial.println("========================");
+        //Serial.println("doing boost touched");
+    //Serial.println("========================");
 
     for (int t = 0;t<this->numToAverage+2;t++)//make sure the value we are reading is an average of "touched"
       this->loop();
