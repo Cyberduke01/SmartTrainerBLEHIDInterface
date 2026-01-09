@@ -16,8 +16,9 @@ void loop() {}
 #include "USBHIDGamepad.h"
 USBHIDGamepad Gamepad;
 
+#include <Arduino.h>
+
 #include <IRremote.h>
-#define IR_PIN 35
 
 #include "BLEComm.h"            //Communication with smart trainer
 #include "BLEComm_HeartRate.h"  //Communication with heart rate device
@@ -30,8 +31,13 @@ USBHIDGamepad Gamepad;
 
 #define STEERING_POT_PIN 4
 #define STEERING_RESCALE_PIN 6
-#define BRAKING_PIN 5
 #define SELECT_CALIBRATION_PIN 42 
+#define IR_PIN 35
+
+#define BUZZER_PIN 48
+//#define BUZZER_PWM_CHANNEL 0
+//#define BUZZER_PWM_FREQ    5000
+//#define BUZZER_PWM_RES     8
 
 #define SD_MOSI     1
 #define SD_MISO     2
@@ -65,6 +71,9 @@ USBHIDGamepad Gamepad;
 #define REMOTE_DEBOUNCE_THRESHOLD_MILLIS 400
 
 #define TIME_TO_START_OK_BUTTON_LIFTOFF_MILLIS 500
+
+bool buzzer_on = false;
+
 float remote_debounce_count = 0;
 float ok_press_count_time = 0;
 int ok_press_count = 0;
@@ -130,6 +139,8 @@ SystemStates currentSystemState = IDLE;
 void setup() {
   Serial.begin(115200);
 
+  pinMode(BUZZER_PIN, OUTPUT);
+
   pinMode(SELECT_CALIBRATION_PIN, INPUT);//check if we want to calibrate the values
   bool CalibrationRequired = !digitalRead(SELECT_CALIBRATION_PIN);
   
@@ -175,6 +186,7 @@ void loop() {
   }*/
 
 
+
 if (elapsed_workout_seconds > 59)
 {
   elapsed_workout_seconds = 0;
@@ -191,7 +203,11 @@ if ((seconds_updated) && (currentSystemState == PLAYING))//save new data to work
   //if (currentSystemState == PLAYING)
   elapsed_workout_seconds++;
   if (!WorkoutObj.AddDataPoint(__heartRate,__cyclePower))
+  {
+    analogWrite(BUZZER_PIN, 0);
     WorkoutObj.SaveWorkout(int(totalEnergy_cal));
+  }
+
 
   seconds_updated = false;
 }
@@ -252,6 +268,7 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
           currentSystemState = IDLE;
           ok_press_count = 0;
           power_screen_update = true;
+          analogWrite(BUZZER_PIN, 0);
           WorkoutObj.SaveWorkout(int(totalEnergy_cal));
         }
       }
@@ -289,6 +306,20 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
   {
     BLECommObj.loop();//let the power update
     BLEComm_HeartRateObj.loop();//let the heartrate update
+
+     
+
+    //Serial.println(buzzer_on);
+      if ((__cyclePower<maxPower) && (!buzzer_on) && (currentSystemState == PLAYING))
+      {
+        analogWrite(BUZZER_PIN, 4);
+        buzzer_on = true;
+      }
+      else
+      {
+        analogWrite(BUZZER_PIN, 0);
+        buzzer_on = false;
+      }
 
     
     if ((__cyclePower != __cyclePower_old) || power_screen_update)
@@ -384,7 +415,7 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
 
   TouchObj.loop();
 
-  /*if ((millis() - millisBLCheck) > 1000)//try to reconnect if BL is disconnected, needs debugging!
+  if ((millis() - millisBLCheck) > 10000)//try to reconnect if BL is disconnected, needs debugging!
   {
       if (!BLEComm_HeartRateObj.isConnected())
       {
@@ -395,7 +426,7 @@ if (IrReceiver.decode()) {//if the user pressed a button on the remote
         BLECommObj.begin();
       }
       millisBLCheck = millis();
-  }*/
+  }
 
 
   //delay(1000); // Delay a second between loops.

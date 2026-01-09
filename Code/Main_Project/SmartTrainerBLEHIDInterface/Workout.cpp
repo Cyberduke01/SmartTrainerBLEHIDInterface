@@ -7,6 +7,11 @@
 Workout::Workout(ScreenControl *_screen)
 {
   this->screen = _screen;
+     
+  snprintf(strPbuffer, sizeof(strPbuffer), "%s", "\0");
+  snprintf(strPostData, sizeof(strPostData), "%s", "heartrates=\0");
+
+  current_size_seconds = 0;
 }
 
 
@@ -20,9 +25,6 @@ void Workout::BeginWorkout()
  unsigned long start = millis();
  while (millis() - start < (500));//wait half a second
  this->screen->ClearScreen();
-
- list_heart_rates.clear();
- list_powers.clear();
 
 
  //Save the time
@@ -87,29 +89,23 @@ void Workout::SaveWorkout(int energy_cal)
      char strcalories[12]; // enough for int (-2147483648)
      itoa(energy_cal, strcalories, 10);
 
-      //list_heart_rates.toStr(buffer_heartrates);
-      //list_powers.toStr(buffer_powers);
-    //char* data = "&heartrates=50,51,52,55&powers=50,51,52,90";
-      //char* time = "12:13:10";
 
-      //char postData[2000] = "endtime=";//240*60*3+240*60*3+100 = 86500
-      snprintf(postData, sizeof(postData), "%s", "endtime=");
-      strcat(postData,time);
-      strcat(postData,"&calories=");
-      strcat(postData,strcalories);
-      strcat(postData,"&heartrates=");
+      if (retrycount == 0)//lets build the post string
+      {
+        strcat(strPostData,"&endtime=");
+        strcat(strPostData,time);
+        strcat(strPostData,"&calories=");
+        strcat(strPostData,strcalories);
+        strcat(strPostData,"&powers=");
+        strcat(strPostData,strPbuffer);
+      }
+      retrycount++;
 
-      strcat(postData,list_heart_rates.toStr(true));
-      //strcat(postData,"50,51,52,55");
-
-      strcat(postData,"&powers=");
-
-      strcat(postData,list_powers.toStr(false));
       //strcat(postData,"50,51,52,90");
 
-      Serial.println(postData);
+      Serial.println(strPostData);
 
-      httpResponseCode = http.POST(postData);
+      httpResponseCode = http.POST(strPostData);
 
       if (httpResponseCode > 0) {
         String response = http.getString();
@@ -146,10 +142,26 @@ void Workout::SaveWorkout(int energy_cal)
 
 bool Workout::AddDataPoint(int heart_rate,int power)
 {//make a check for the max length of array, if to much, save workout
-  if (!(list_heart_rates.add(heart_rate,true) && list_powers.add(power,false)))
-  {
-    return false; 
-  }
+  if (current_size_seconds>=MAX_SIZE_SECONDS)
+    return false;
+
+   char temp[12]; // enough for int (-2147483648)
+   if (current_size_seconds != 0)
+   {
+      strcat(strPbuffer, ",");
+      strcat(strPostData, ",");
+   }
+  itoa(heart_rate, temp, 10);
+  strcat(strPostData, temp);
+
+  itoa(power, temp, 10);
+  strcat(strPbuffer, temp);
+
+  current_size_seconds++;
+
+  //Serial.print("Elapsed minutes: ");
+  //Serial.println(current_size_seconds/60.0);
+
   return true;
 }
 
